@@ -4,59 +4,51 @@ import FileList from './components/FileList';
 import FileSelector from './components/FileSelector';
 import { sendEmailAddresses } from './services/email-sender';
 import { parseFileData, readFile } from './services/file-reader';
+import { Status, useAsync } from './utils/useAsync';
 
-const Status = {
-  IDLE: 'idle',
-  LOADING: 'loading',
-  SUCCESS: 'success',
-  ERROR: 'error',
-};
+async function parseFilesAndSendEmails(files, form) {
+  const promises = [];
+  for (const file of files) {
+    promises.push(readFile(file));
+  }
+
+  const data = await Promise.all(promises);
+
+  const emailAddresses = data
+    .map(fileData => parseFileData(fileData.data))
+    .flat()
+    .filter(Boolean);
+
+  const response = await sendEmailAddresses(emailAddresses);
+
+  if (!response.ok && response.error) {
+    return Promise.reject(response);
+  } else {
+    form.reset();
+  }
+}
 
 function App() {
   const [fileList, setFileList] = React.useState([]);
-  const [status, setStatus] = React.useState(Status.IDLE);
-  const [error, setError] = React.useState(null);
   const formRef = React.useRef(null);
+
+  const { status, error, run, reset } = useAsync();
 
   const handleFormSubmit = async event => {
     event.preventDefault();
-    setStatus(Status.LOADING);
 
-    const promises = [];
+    run(parseFilesAndSendEmails(fileList, formRef.current));
+  };
 
-    for (const file of fileList) {
-      promises.push(readFile(file));
-    }
-
-    try {
-      const data = await Promise.all(promises);
-
-      const emailAddresses = data
-        .map(fileData => parseFileData(fileData.data))
-        .flat()
-        .filter(Boolean);
-
-      const response = await sendEmailAddresses(emailAddresses);
-
-      if (!response.ok && response.error) {
-        setError(response);
-        setStatus(Status.ERROR);
-      } else {
-        formRef.current.reset();
-        setFileList([]);
-        setError(null);
-        setStatus(Status.SUCCESS);
-      }
-    } catch (error) {
-      setError(error);
-      setStatus(Status.ERROR);
-    }
+  const handleFilesChange = fileList => {
+    reset();
+    setFileList(fileList);
   };
 
   return (
     <div>
       <form ref={formRef} onSubmit={handleFormSubmit}>
-        <FileSelector fileTypes='.txt' onChange={setFileList} />
+        <FileSelector fileTypes='.txt' onChange={handleFilesChange} />
         <FileList files={fileList} />
         <button disabled={!fileList?.length}>Send emails</button>
       </form>
