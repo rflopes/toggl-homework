@@ -9,7 +9,7 @@ import { Status, useAsync } from './utils/useAsync';
 import styles from './App.module.css';
 import Spinner from './components/Spinner';
 
-async function parseFilesAndSendEmails(files, onSuccess) {
+async function parseFiles(files) {
   const promises = [];
   for (const file of files) {
     promises.push(readFile(file));
@@ -17,11 +17,10 @@ async function parseFilesAndSendEmails(files, onSuccess) {
 
   const data = await Promise.all(promises);
 
-  const emailAddresses = data
-    .map(fileData => parseFileData(fileData.data))
-    .flat()
-    .filter(Boolean);
+  return data.map(fileData => parseFileData(fileData.data));
+}
 
+async function sendEmails(emailAddresses, onSuccess) {
   const response = await sendEmailAddresses(emailAddresses);
 
   if (!response.ok && response.error) {
@@ -33,6 +32,7 @@ async function parseFilesAndSendEmails(files, onSuccess) {
 
 function App() {
   const [fileList, setFileList] = React.useState([]);
+  const [filesContent, setFilesContent] = React.useState([]);
   const formRef = React.useRef(null);
 
   const { status, error, run, reset } = useAsync();
@@ -41,11 +41,13 @@ function App() {
   const handleFormSubmit = async event => {
     event.preventDefault();
 
-    run(parseFilesAndSendEmails(fileList, resetForm));
+    run(sendEmails(filesContent.flat(), resetForm));
   };
 
-  const handleFilesChange = fileList => {
+  const handleFilesChange = async fileList => {
     reset();
+    const content = await parseFiles(fileList);
+    setFilesContent(content);
     setFileList(fileList);
   };
 
@@ -53,7 +55,7 @@ function App() {
     <div>
       <form className={styles.form} ref={formRef} onSubmit={handleFormSubmit}>
         <FileSelector fileTypes='.txt' onChange={handleFilesChange} />
-        <FileList files={fileList} />
+        <FileList files={fileList} filesContent={filesContent} />
         <button
           className={styles.form__submit}
           disabled={!fileList?.length || status === Status.LOADING}

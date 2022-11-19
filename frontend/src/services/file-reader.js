@@ -12,5 +12,5 @@ export function readFile(file) {
 }
 
 export function parseFileData(fileData) {
-  return fileData.split('\n');
+  return fileData.split('\n').filter(Boolean);
 }
