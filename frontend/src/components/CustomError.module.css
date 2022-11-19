@@ -1,0 +1,5 @@
+.error__message {
+  font-style: italic;
+  font-weight: bold;
+  color: darkred;
+}

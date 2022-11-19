@@ -1,22 +1,28 @@
-function CustomError({ error }) {
-  let message = <span>Unknown error</span>;
-  let content = <p>Something bad happened, please refresh the page</p>;
+import React from 'react';
+import styles from './CustomError.module.css';
 
-  if (error.error === 'send_failure') {
-    message = <span>Failed to send emails to some addresses</span>;
-    content = (
-      <ul>
-        {error.emails.map(email => (
-          <li key={email}>{email}</li>
-        ))}
-      </ul>
-    );
-  }
+function CustomError({ error }) {
+  let messageText =
+    error.error === 'send_failure'
+      ? 'Failed to send emails to some addresses'
+      : error.error === 'invalid_email_address'
+      ? 'Some addresses are invalid'
+      : 'Unknown error';
 
   return (
     <div>
-      <p>There was an error: {message}</p>
-      {content}
+      <p>
+        There was an error:{' '}
+        <span className={styles.error__message}>{messageText}</span>
+      </p>
+      {error.error === 'send_failure' ||
+      error.error === 'invalid_email_address' ? (
+        <ul>
+          {error.emails.map(email => (
+            <li key={email}>{email}</li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   );
 }

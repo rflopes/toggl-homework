@@ -6,7 +6,9 @@ import { sendEmailAddresses } from './services/email-sender';
 import { parseFileData, readFile } from './services/file-reader';
 import { Status, useAsync } from './utils/useAsync';
 
-async function parseFilesAndSendEmails(files, form) {
+import styles from './App.module.css';
+
+async function parseFilesAndSendEmails(files, onSuccess) {
   const promises = [];
   for (const file of files) {
     promises.push(readFile(file));
@@ -24,7 +26,7 @@ async function parseFilesAndSendEmails(files, form) {
   if (!response.ok && response.error) {
     return Promise.reject(response);
   } else {
-    form.reset();
+    onSuccess();
   }
 }
 
@@ -34,10 +36,11 @@ function App() {
 
   const { status, error, run, reset } = useAsync();
 
+  const resetForm = () => formRef.current.reset();
   const handleFormSubmit = async event => {
     event.preventDefault();
 
-    run(parseFilesAndSendEmails(fileList, formRef.current));
+    run(parseFilesAndSendEmails(fileList, resetForm));
   };
 
   const handleFilesChange = fileList => {
@@ -47,10 +50,15 @@ function App() {
 
   return (
     <div>
-      <form ref={formRef} onSubmit={handleFormSubmit}>
+      <form className={styles.form} ref={formRef} onSubmit={handleFormSubmit}>
         <FileSelector fileTypes='.txt' onChange={handleFilesChange} />
         <FileList files={fileList} />
-        <button disabled={!fileList?.length}>Send emails</button>
+        <button
+          className={styles.form__submit}
+          disabled={!fileList?.length || status === Status.LOADING}
+        >
+          Send emails
+        </button>
       </form>
       {status === Status.ERROR && <CustomError error={error} />}
       {status === Status.SUCCESS && <p>Emails sent successfully!</p>}

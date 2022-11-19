@@ -7,10 +7,10 @@ function FileList({ files }) {
   }
 
   return (
-    <>
-      <h1>File List:</h1>
+    <div>
+      <h3>File List:</h3>
       <ul>{fileData}</ul>
-    </>
+    </div>
   );
 }
 
