@@ -10,3 +10,7 @@ export function readFile(file) {
     reader.readAsText(file);
   });
 }
+
+export function parseFileData(fileData) {
+  return fileData.split('\n');
+}

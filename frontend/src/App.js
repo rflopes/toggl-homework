@@ -1,7 +1,7 @@
 import React from 'react';
 import FileList from './components/FileList';
 import FileSelector from './components/FileSelector';
-import { readFile } from './services/file-reader';
+import { parseFileData, readFile } from './services/file-reader';
 
 function App() {
   const [fileList, setFileList] = React.useState([]);
@@ -19,6 +19,13 @@ function App() {
     try {
       const data = await Promise.all(promises);
       console.log({ data });
+
+      const emailAddresses = data
+        .map(fileData => parseFileData(fileData.data))
+        .flat()
+        .filter(Boolean);
+
+      console.log({ emailAddresses });
     } catch (error) {
       console.log(error);
     }
