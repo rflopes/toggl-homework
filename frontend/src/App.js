@@ -7,6 +7,7 @@ import { parseFileData, readFile } from './services/file-reader';
 import { Status, useAsync } from './utils/useAsync';
 
 import styles from './App.module.css';
+import Spinner from './components/Spinner';
 
 async function parseFilesAndSendEmails(files, onSuccess) {
   const promises = [];
@@ -60,6 +61,7 @@ function App() {
           Send emails
         </button>
       </form>
+      {status === Status.LOADING && <Spinner />}
       {status === Status.ERROR && <CustomError error={error} />}
       {status === Status.SUCCESS && <p>Emails sent successfully!</p>}
     </div>
