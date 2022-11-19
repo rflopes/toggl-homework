@@ -1,6 +1,7 @@
 import React from 'react';
 import FileList from './components/FileList';
 import FileSelector from './components/FileSelector';
+import { readFile } from './services/file-reader';
 
 function App() {
   const [fileList, setFileList] = React.useState([]);
@@ -8,6 +9,19 @@ function App() {
   const handleFormSubmit = async event => {
     event.preventDefault();
     console.log(fileList);
+
+    const promises = [];
+
+    for (const file of fileList) {
+      promises.push(readFile(file));
+    }
+
+    try {
+      const data = await Promise.all(promises);
+      console.log({ data });
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
